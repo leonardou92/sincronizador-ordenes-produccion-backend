@@ -1,0 +1,38 @@
+{
+  "name": "sincronizador-ordenes-produccion-backend",
+  "version": "1.0.0",
+  "description": "Backend de administración y ETL para consolidación SAP + Global",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
+    "dev": "prisma generate && tsx watch src/index.ts",
+    "etl": "tsx src/etl/consolidar.ts",
+    "encrypt-password": "tsx src/cli/encrypt-password.ts",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "tsx scripts/prisma-cli.ts migrate deploy",
+    "db:migrate:dev": "tsx scripts/prisma-cli.ts migrate dev",
+    "db:push": "tsx scripts/prisma-cli.ts db push",
+    "db:studio": "tsx scripts/prisma-cli.ts studio"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@prisma/client": "^6.4.1",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "mysql2": "^3.11.3",
+    "mssql": "^11.0.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/mssql": "^9.1.7",
+    "@types/node": "^22.13.4",
+    "prisma": "^6.4.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

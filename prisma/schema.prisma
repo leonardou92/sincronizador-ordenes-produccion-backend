@@ -1,0 +1,88 @@
+// Esquema de la base de datos de control (SQL Server)
+// Aplicar: npm run db:migrate  |  sincronizar sin historial: npm run db:push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+/// Metadatos de conexión a cada base Global por planta
+model ConfigPlantaGlobal {
+  id                    Int      @id @default(autoincrement())
+  nombre_planta         String   @unique @db.NVarChar(100)
+  codigo_planta         String   @unique @db.NVarChar(50)
+  db_type               String   @default("mssql") @db.NVarChar(20)
+  host                  String   @db.NVarChar(255)
+  puerto                Int      @default(1433)
+  db_name               String   @db.NVarChar(128)
+  usuario               String   @db.NVarChar(128)
+  contrasena_encriptada String   @db.NVarChar(512)
+  activo                Boolean  @default(true)
+  fecha_creacion        DateTime @default(now()) @db.DateTime2
+  fecha_actualizacion   DateTime @default(now()) @updatedAt @db.DateTime2
+
+  @@index([activo], map: "IX_config_plantas_activo")
+  @@map("tbl_config_plantas_global")
+}
+
+/// Resumen diario de órdenes de producción sincronizado desde Global (MySQL)
+model ResumenOrdenProduccion {
+  id                   BigInt   @id @default(autoincrement())
+  codigo_planta        String   @db.NVarChar(50)
+  fecha_reporte        DateTime @db.Date
+  codigo_granja        String   @db.NVarChar(50)
+  nombre_granja        String   @db.NVarChar(200)
+  numero_documento     String   @db.NVarChar(100)
+  aves_granja          Decimal  @db.Decimal(18, 4)
+  kg_granja            Decimal  @db.Decimal(18, 4)
+  peso_prom_granja     Decimal? @db.Decimal(10, 2)
+  aves_produccion      Decimal  @db.Decimal(18, 4)
+  kg_produccion        Decimal  @db.Decimal(18, 4)
+  peso_prom_produccion Decimal? @db.Decimal(10, 2)
+  fecha_sincronizacion DateTime @default(now()) @db.DateTime2
+
+  @@unique([codigo_planta, fecha_reporte, codigo_granja, numero_documento], map: "UQ_resumen_op_planta_fecha_granja_doc")
+  @@index([fecha_reporte], map: "IX_resumen_op_fecha")
+  @@index([codigo_planta], map: "IX_resumen_op_codigo_planta")
+  @@map("tbl_ordenes_produccion_resumen")
+}
+
+/// Detalle consolidado de producción sincronizado desde Global (MySQL)
+model DetalleProduccion {
+  id                   BigInt   @id @default(autoincrement())
+  codigo_planta        String   @db.NVarChar(50)
+  fecha_reporte        DateTime @db.Date
+  codigo               String   @db.NVarChar(50)
+  referencia           String   @db.NVarChar(200)
+  unidades             Decimal  @default(0) @db.Decimal(18, 4)
+  promedio             Decimal  @default(0) @db.Decimal(10, 2)
+  kg                   Decimal  @default(0) @db.Decimal(18, 4)
+  categoria            String   @db.NVarChar(50)
+  fecha_sincronizacion DateTime @default(now()) @db.DateTime2
+
+  @@unique([codigo_planta, fecha_reporte, codigo, referencia, categoria], map: "UQ_detalle_prod_planta_fecha_ref_cat")
+  @@index([fecha_reporte], map: "IX_detalle_prod_fecha")
+  @@index([codigo_planta], map: "IX_detalle_prod_codigo_planta")
+  @@map("tbl_ordenes_produccion_detalle")
+}
+
+/// Resultado persistido del ETL (opcional)
+model ProduccionConsolidada {
+  id                  BigInt    @id @default(autoincrement())
+  origen_planta       String    @db.NVarChar(100)
+  orden_produccion    String    @db.NVarChar(50)
+  material            String    @db.NVarChar(50)
+  cantidad_global     Decimal?  @db.Decimal(18, 4)
+  cantidad_sap        Decimal?  @db.Decimal(18, 4)
+  unidad              String?   @db.NVarChar(10)
+  fecha_produccion    DateTime? @db.Date
+  centro_sap          String?   @db.NVarChar(20)
+  estado_cruce        String?   @db.NVarChar(30)
+  fecha_consolidacion DateTime  @default(now()) @db.DateTime2
+
+  @@map("tbl_produccion_consolidada")
+}
