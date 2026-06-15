@@ -2,10 +2,14 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { getEnv } from "./config/env";
 import { disconnectPrisma } from "./db/prisma";
+import { closeControlPool } from "./db/controlDb";
 import { plantasRoutes } from "./routes/plantas";
 import { detalleRoutes } from "./routes/detalle";
 import { resumenRoutes } from "./routes/resumen";
 import { sapRoutes } from "./routes/sap";
+import { usersRoutes } from "./routes/users";
+import { authRoutes } from "./routes/auth";
+import { startAdSyncCron } from "./jobs/adSyncCron";
 
 async function main(): Promise<void> {
   const env = getEnv();
@@ -16,10 +20,15 @@ async function main(): Promise<void> {
   await app.register(resumenRoutes);
   await app.register(detalleRoutes);
   await app.register(sapRoutes);
+  await app.register(usersRoutes);
+  await app.register(authRoutes);
+
+  startAdSyncCron(app.log);
 
   app.get("/health", async () => ({ status: "ok", timestamp: new Date().toISOString() }));
 
   const shutdown = async (): Promise<void> => {
+    await closeControlPool();
     await disconnectPrisma();
     await app.close();
     process.exit(0);

@@ -147,3 +147,32 @@ export async function queryPlantMysql<T>(
 
 export type { PlantConnectionConfig };
 export { sql };
+
+let controlPool: ConnectionPool | null = null;
+let controlPoolConnect: Promise<ConnectionPool> | null = null;
+
+/** Pool compartido para SQL Server de control (evita reconectar en cada login). */
+export async function getControlPool(): Promise<ConnectionPool> {
+  if (controlPool?.connected) {
+    return controlPool;
+  }
+
+  if (!controlPoolConnect) {
+    controlPoolConnect = (async () => {
+      const pool = new sql.ConnectionPool(buildSqlConfig());
+      await pool.connect();
+      controlPool = pool;
+      return pool;
+    })();
+  }
+
+  return controlPoolConnect;
+}
+
+export async function closeControlPool(): Promise<void> {
+  if (controlPool) {
+    await controlPool.close();
+  }
+  controlPool = null;
+  controlPoolConnect = null;
+}
