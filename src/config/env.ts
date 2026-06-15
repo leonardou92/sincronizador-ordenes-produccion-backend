@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const envSchema = z.object({
   DB_HOST: z.string().min(1),
@@ -26,6 +26,13 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => v !== "false"),
+  /** sybase = SAP vía Sybase ASE; control_db = vista en SQL Server de control */
+  ETL_SAP_SOURCE: z.enum(["sybase", "control_db"]).default("control_db"),
+  SYBASE_SERVER: z.string().optional(),
+  SYBASE_PORT: z.coerce.number().default(4901),
+  SYBASE_UID: z.string().optional(),
+  SYBASE_PWD: z.string().optional(),
+  SYBASE_DATABASE: z.string().optional(),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

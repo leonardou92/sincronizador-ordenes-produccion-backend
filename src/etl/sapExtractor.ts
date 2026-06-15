@@ -1,5 +1,7 @@
 import { getEnv } from "../config/env";
 import { prisma } from "../db/prisma";
+import { isSybaseConfigured, querySybase } from "../db/sybaseDb";
+import { SAP_ORDENES_PRODUCCION_QUERY } from "../sql/sapOrdenesProduccionQuery";
 import type { ProduccionSapRow } from "../types/planta";
 import { etlLog } from "./logger";
 
@@ -36,10 +38,28 @@ function getMockSapData(): ProduccionSapRow[] {
 }
 
 /**
+ * Extrae órdenes de producción desde SAP vía Sybase ASE (ODBC).
+ */
+async function extractFromSybaseSap(): Promise<ProduccionSapRow[]> {
+  if (!isSybaseConfigured()) {
+    throw new Error(
+      "ETL_SAP_SOURCE=sybase pero faltan SYBASE_SERVER, SYBASE_UID o SYBASE_PWD"
+    );
+  }
+
+  const rows = await querySybase<ProduccionSapRow>(SAP_ORDENES_PRODUCCION_QUERY);
+  return rows.map((row) => ({
+    ...row,
+    cantidad: Number(row.cantidad),
+    fecha_produccion: new Date(row.fecha_produccion),
+  }));
+}
+
+/**
  * Extrae órdenes de producción desde SAP (vista/tabla en BD de control).
  * Ajuste la consulta según su esquema real en SAP SQL Server / linked server.
  */
-async function extractFromSapDatabase(): Promise<ProduccionSapRow[]> {
+async function extractFromControlDb(): Promise<ProduccionSapRow[]> {
   return prisma.$queryRaw<ProduccionSapRow[]>`
     SELECT
       orden_produccion,
@@ -53,19 +73,25 @@ async function extractFromSapDatabase(): Promise<ProduccionSapRow[]> {
 }
 
 export async function extractSapProduction(): Promise<ProduccionSapRow[]> {
-  const useMock = getEnv().ETL_SAP_MOCK;
+  const env = getEnv();
+  const useMock = env.ETL_SAP_MOCK;
 
   if (useMock) {
     etlLog.info("Extracción SAP: modo simulado (ETL_SAP_MOCK=true)");
     return getMockSapData();
   }
 
-  etlLog.info("Extracción SAP: consultando vista dbo.vw_sap_ordenes_produccion");
+  const source = env.ETL_SAP_SOURCE;
+  etlLog.info(`Extracción SAP: origen ${source}`);
+
   try {
-    return await extractFromSapDatabase();
+    if (source === "sybase") {
+      return await extractFromSybaseSap();
+    }
+    return await extractFromControlDb();
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    etlLog.warn(`Fallo consulta SAP real, usando mock como respaldo: ${msg}`);
+    etlLog.warn(`Fallo consulta SAP real (${source}), usando mock como respaldo: ${msg}`);
     return getMockSapData();
   }
 }

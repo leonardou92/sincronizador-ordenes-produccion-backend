@@ -5,6 +5,7 @@ import { disconnectPrisma } from "./db/prisma";
 import { plantasRoutes } from "./routes/plantas";
 import { detalleRoutes } from "./routes/detalle";
 import { resumenRoutes } from "./routes/resumen";
+import { sapRoutes } from "./routes/sap";
 
 async function main(): Promise<void> {
   const env = getEnv();
@@ -14,6 +15,7 @@ async function main(): Promise<void> {
   await app.register(plantasRoutes);
   await app.register(resumenRoutes);
   await app.register(detalleRoutes);
+  await app.register(sapRoutes);
 
   app.get("/health", async () => ({ status: "ok", timestamp: new Date().toISOString() }));
 

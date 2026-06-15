@@ -9,12 +9,15 @@
     "dev": "prisma generate && tsx watch src/index.ts",
     "etl": "tsx src/etl/consolidar.ts",
     "encrypt-password": "tsx src/cli/encrypt-password.ts",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && tsx scripts/patch-sybase-jar.ts",
     "db:generate": "prisma generate",
     "db:migrate": "tsx scripts/prisma-cli.ts migrate deploy",
     "db:migrate:dev": "tsx scripts/prisma-cli.ts migrate dev",
     "db:push": "tsx scripts/prisma-cli.ts db push",
-    "db:studio": "tsx scripts/prisma-cli.ts studio"
+    "db:studio": "tsx scripts/prisma-cli.ts studio",
+    "sybase:patch": "tsx scripts/patch-sybase-jar.ts",
+    "sybase:test": "tsx scripts/test-sybase-connection.ts",
+    "sybase:jdbc-test": "tsx scripts/test-sybase-jdbc-direct.ts"
   },
   "engines": {
     "node": ">=18"
@@ -24,8 +27,8 @@
     "@prisma/client": "^6.4.1",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1",
-    "mysql2": "^3.11.3",
     "mssql": "^11.0.1",
+    "mysql2": "^3.11.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {
