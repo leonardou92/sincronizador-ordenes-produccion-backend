@@ -10,6 +10,7 @@ import { sapRoutes } from "./routes/sap";
 import { usersRoutes } from "./routes/users";
 import { authRoutes } from "./routes/auth";
 import { startAdSyncCron } from "./jobs/adSyncCron";
+import { startProduccionSyncCron } from "./jobs/produccionSyncCron";
 
 async function main(): Promise<void> {
   const env = getEnv();
@@ -24,6 +25,7 @@ async function main(): Promise<void> {
   await app.register(authRoutes);
 
   startAdSyncCron(app.log);
+  startProduccionSyncCron(app.log);
 
   app.get("/health", async () => ({ status: "ok", timestamp: new Date().toISOString() }));
 

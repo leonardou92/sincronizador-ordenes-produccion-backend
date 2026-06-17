@@ -19,6 +19,7 @@
     "sybase:test": "tsx scripts/test-sybase-connection.ts",
     "sybase:jdbc-test": "tsx scripts/test-sybase-jdbc-direct.ts",
     "sync:ad": "tsx scripts/run-ad-sync.ts",
+    "sync:produccion": "tsx scripts/run-produccion-sync.ts",
     "ldap:test": "tsx scripts/test-ldap-connection.ts"
   },
   "engines": {
