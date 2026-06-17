@@ -1,9 +1,29 @@
 import { spawn } from "child_process";
+import fs from "fs";
 import path from "path";
 import { getEnv, type AppEnv } from "../config/env";
 
 const JAVA_DIR = path.resolve(process.cwd(), "java");
 const JCONN_JAR = path.join(JAVA_DIR, "lib", "jconn4.jar");
+
+function resolveJavaBin(): string {
+  if (process.env.JAVA_BIN?.trim()) {
+    return process.env.JAVA_BIN.trim();
+  }
+
+  const bundledCandidates = fs
+    .readdirSync(JAVA_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith("jdk-"))
+    .map((entry) => path.join(JAVA_DIR, entry.name, "bin", "java"));
+
+  for (const candidate of bundledCandidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return "java";
+}
 
 export type SybaseEnv = Pick<
   AppEnv,
@@ -44,8 +64,9 @@ export async function querySybase<T>(queryText: string): Promise<T[]> {
   const cp = buildJavaClasspath();
 
   return new Promise<T[]>((resolve, reject) => {
+    const javaBin = resolveJavaBin();
     const child = spawn(
-      "java",
+      javaBin,
       [
         "-cp",
         cp,

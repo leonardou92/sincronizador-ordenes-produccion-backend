@@ -3,7 +3,8 @@ import {
   persistResumenOrdenProduccionRows,
   type ResumenOrdenProduccionRow,
 } from "../db/resumenOrdenProduccionDb";
-import { RESUMEN_ORDENES_PRODUCCION_SQL } from "../sql/resumenOrdenesProduccionQuery";
+import { RESUMEN_ORDENES_PRODUCCION_SQL, RESUMEN_ORDENES_PRODUCCION_DATE_PARAM_PAIRS } from "../sql/resumenOrdenesProduccionQuery";
+import { buildMysqlDateRangeParams } from "../sql/mysqlDateParams";
 import { decryptPassword } from "../security/crypto";
 import type { SincronizarResumenInput } from "../schemas/sincronizar.schema";
 import type {
@@ -113,7 +114,11 @@ export async function sincronizarResumenPorPlanta(
       password,
     },
     RESUMEN_ORDENES_PRODUCCION_SQL,
-    [input.fecha_desde, input.fecha_hasta]
+    buildMysqlDateRangeParams(
+      input.fecha_desde,
+      input.fecha_hasta,
+      RESUMEN_ORDENES_PRODUCCION_DATE_PARAM_PAIRS,
+    ),
   );
 
   const rows = filas.map((fila) => mapFilaToRow(fila, codigoPlanta));

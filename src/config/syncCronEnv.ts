@@ -5,7 +5,7 @@ const syncCronEnvSchema = z.object({
     .string()
     .optional()
     .transform((v) => v !== "false"),
-  PRODUCCION_SYNC_CRON: z.string().default("5 10 * * *"),
+  PRODUCCION_SYNC_CRON: z.string().default("30 23 * * *"),
   PRODUCCION_SYNC_CRON_TIMEZONE: z.string().default("America/Caracas"),
   PRODUCCION_SYNC_INCLUDE_SAP: z
     .string()

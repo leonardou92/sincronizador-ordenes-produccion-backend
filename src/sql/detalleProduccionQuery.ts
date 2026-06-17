@@ -1,12 +1,9 @@
 /**
  * Reporte maestro consolidado desde Global (MySQL).
- * Parámetros: fecha_desde, fecha_hasta (YYYY-MM-DD).
- * Dinámico por tipo_uso_id, status_id = 101 (confirmado). Compatible con MySQL 5.7.
+ * Parámetros (×5): fecha_desde, fecha_hasta (YYYY-MM-DD) por cada bloque.
+ * Sin CTE: compatible con MySQL 5.7.
  */
 export const DETALLE_PRODUCCION_SQL = `
-WITH parametro AS (
-    SELECT ? AS fecha_desde, ? AS fecha_hasta
-)
 SELECT fecha, codigo, referencia, unidades, promedio, kg, categoria
 FROM (
     -- Bloque 1: Pollo Beneficiado (dinámico por tipo_uso_id = 2)
@@ -20,8 +17,7 @@ FROM (
         'POLLO BENEFICIADO' AS categoria
     FROM producto p
     INNER JOIN transaccion t ON t.producto_id = p.id
-    CROSS JOIN parametro pr
-    WHERE t.fecha BETWEEN pr.fecha_desde AND pr.fecha_hasta
+    WHERE t.fecha BETWEEN ? AND ?
       AND t.estatus_id = 3
       AND t.status_id = 101
       AND p.tipo_uso_id = 2
@@ -45,8 +41,7 @@ FROM (
         'VICERAS' AS categoria
     FROM producto p
     INNER JOIN transaccion t ON t.producto_id = p.id
-    CROSS JOIN parametro pr
-    WHERE t.fecha BETWEEN pr.fecha_desde AND pr.fecha_hasta
+    WHERE t.fecha BETWEEN ? AND ?
       AND t.estatus_id = 3
       AND t.status_id = 101
       AND p.tipo_uso_id = 85
@@ -74,8 +69,7 @@ FROM (
         'AVES AHOGADAS' AS categoria
     FROM transaccion t
     INNER JOIN producto p ON t.producto_id = p.id
-    CROSS JOIN parametro pr
-    WHERE t.fecha BETWEEN pr.fecha_desde AND pr.fecha_hasta
+    WHERE t.fecha BETWEEN ? AND ?
       AND p.codigo = '300002'
       AND t.status_id = 101
       AND t.deleted_at IS NULL
@@ -104,8 +98,7 @@ FROM (
             'DESPRESADO - ENTRADAS (Materia Prima)' AS clasificacion
         FROM transaccion t
         INNER JOIN producto p ON t.producto_id = p.id
-        CROSS JOIN parametro pr
-        WHERE t.fecha BETWEEN pr.fecha_desde AND pr.fecha_hasta
+        WHERE t.fecha BETWEEN ? AND ?
           AND t.estatus_id = 2
           AND t.status_id = 101
           AND t.destino_id = 4
@@ -127,8 +120,7 @@ FROM (
             END AS clasificacion
         FROM transaccion t
         INNER JOIN producto p ON t.producto_id = p.id
-        CROSS JOIN parametro pr
-        WHERE t.fecha BETWEEN pr.fecha_desde AND pr.fecha_hasta
+        WHERE t.fecha BETWEEN ? AND ?
           AND t.estatus_id = 6
           AND t.status_id = 101
           AND t.procedencia_id = 4
@@ -139,3 +131,6 @@ FROM (
 WHERE unidades > 0 OR kg > 0
 ORDER BY fecha ASC, categoria ASC, codigo ASC, referencia ASC
 `;
+
+/** Número de pares fecha_desde/fecha_hasta que espera la consulta de detalle. */
+export const DETALLE_PRODUCCION_DATE_PARAM_PAIRS = 5;

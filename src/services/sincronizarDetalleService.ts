@@ -1,6 +1,7 @@
 import { queryPlantMysql } from "../db/controlDb";
 import { persistDetalleProduccionRows, type DetalleProduccionRow } from "../db/detalleProduccionDb";
-import { DETALLE_PRODUCCION_SQL } from "../sql/detalleProduccionQuery";
+import { DETALLE_PRODUCCION_SQL, DETALLE_PRODUCCION_DATE_PARAM_PAIRS } from "../sql/detalleProduccionQuery";
+import { buildMysqlDateRangeParams } from "../sql/mysqlDateParams";
 import { decryptPassword } from "../security/crypto";
 import type { SincronizarResumenInput } from "../schemas/sincronizar.schema";
 import type {
@@ -86,7 +87,11 @@ export async function sincronizarDetallePorPlanta(
       password,
     },
     DETALLE_PRODUCCION_SQL,
-    [input.fecha_desde, input.fecha_hasta]
+    buildMysqlDateRangeParams(
+      input.fecha_desde,
+      input.fecha_hasta,
+      DETALLE_PRODUCCION_DATE_PARAM_PAIRS,
+    ),
   );
 
   const rows = filas.map((fila) => mapFilaToRow(fila, codigoPlanta));
