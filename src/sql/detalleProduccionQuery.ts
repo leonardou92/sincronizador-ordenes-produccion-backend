@@ -42,7 +42,7 @@ FROM (
     FROM producto p
     INNER JOIN transaccion t ON t.producto_id = p.id
     WHERE t.fecha BETWEEN ? AND ?
-      AND t.estatus_id IN (3, 46)
+      AND t.estatus_id IN (3, 48)
       AND t.status_id = 101
       AND p.tipo_uso_id = 85
       AND t.deleted_at IS NULL
