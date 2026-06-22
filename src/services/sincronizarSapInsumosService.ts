@@ -62,7 +62,9 @@ function mapFilaToRow(fila: SapInsumosProcesoExtraccion): DetalleProduccionRow {
   const werks = getField(fila, "Werks", "WERKS");
   const codigo = getField(fila, "Codigo", "CODIGO");
   const referencia = getField(fila, "Referencia", "REFERENCIA");
-  const unidades = getField(fila, "Unidades_Calculadas", "UNIDADES_CALCULADAS");
+  const consumo = getField(fila, "CONSUMO", "Consumo");
+  const averiado = getField(fila, "AVERIADO", "Averiado");
+  const total = getField(fila, "TOTAL", "Total");
   const clasificacion = getField(fila, "Clasificacion", "CLASIFICACION");
   const fecha = getField(fila, "Fecha_Contabilizacion", "FECHA_CONTABILIZACION");
 
@@ -75,10 +77,10 @@ function mapFilaToRow(fila: SapInsumosProcesoExtraccion): DetalleProduccionRow {
     fecha_reporte: parseFechaFromExtraccion(fecha),
     codigo: String(codigo).trim(),
     referencia: String(referencia ?? "").trim(),
-    unidades: toNumber(unidades),
-    promedio: toNumber(getField(fila, "promedio", "PROMEDIO")),
-    kg: toNumber(getField(fila, "kg", "KG")),
-    categoria: String(clasificacion ?? "INSUMOS").trim(),
+    unidades: toNumber(total),
+    promedio: toNumber(consumo),
+    kg: toNumber(averiado),
+    categoria: String(clasificacion ?? "OTRO INSUMO").trim(),
   };
 }
 
