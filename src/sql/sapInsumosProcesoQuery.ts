@@ -37,32 +37,16 @@ FROM (
         END AS Clasificacion,
         CASE
             WHEN mseg.BWART IN ('261', '201') THEN
-                mseg.MENGE * CASE
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
-                    ELSE 1
-                END
+                mseg.MENGE * COALESCE(CAST(marm.UMREN AS DECIMAL(18,5)) / NULLIF(CAST(marm.UMREZ AS DECIMAL(18,5)), 0), 1.0)
             WHEN mseg.BWART IN ('262', '202') THEN
-                -mseg.MENGE * CASE
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
-                    ELSE 1
-                END
+                -mseg.MENGE * COALESCE(CAST(marm.UMREN AS DECIMAL(18,5)) / NULLIF(CAST(marm.UMREZ AS DECIMAL(18,5)), 0), 1.0)
             ELSE 0
         END AS Consumo,
         CASE
             WHEN mseg.BWART = '551' THEN
-                mseg.MENGE * CASE
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
-                    ELSE 1
-                END
+                mseg.MENGE * COALESCE(CAST(marm.UMREN AS DECIMAL(18,5)) / NULLIF(CAST(marm.UMREZ AS DECIMAL(18,5)), 0), 1.0)
             WHEN mseg.BWART = '552' THEN
-                -mseg.MENGE * CASE
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
-                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
-                    ELSE 1
-                END
+                -mseg.MENGE * COALESCE(CAST(marm.UMREN AS DECIMAL(18,5)) / NULLIF(CAST(marm.UMREZ AS DECIMAL(18,5)), 0), 1.0)
             ELSE 0
         END AS Averiado
     FROM SAPSR3.MSEG AS mseg
@@ -77,8 +61,18 @@ FROM (
     INNER JOIN SAPSR3.MARA AS mara
         ON makt.MANDT = mara.MANDT
         AND makt.MATNR = mara.MATNR
+    LEFT JOIN SAPSR3.MARM AS marm
+        ON mseg.MANDT = marm.MANDT
+        AND mseg.MATNR = marm.MATNR
+        AND marm.MEINH = (
+            SELECT MIN(m2.MEINH)
+            FROM SAPSR3.MARM AS m2
+            WHERE m2.MANDT = mseg.MANDT
+              AND m2.MATNR = mseg.MATNR
+              AND m2.MEINH IN ('ST', 'PZ', 'UN', 'PZA')
+        )
     WHERE mkpf.BUDAT >= '${fromDateSap}'
-      AND mseg.WERKS LIKE 'PB%'
+      AND mseg.WERKS like 'PB%'
       AND mseg.LGORT IN ('3300', '3301')
       AND mseg.BWART IN ('261', '262', '201', '202', '551', '552')
       AND (mara.MATKL IN ('EMPAQ001', 'EMPAQ003', 'CESTAS')
