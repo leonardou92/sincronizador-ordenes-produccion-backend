@@ -36,13 +36,33 @@ FROM (
             ELSE 'OTRO INSUMO'
         END AS Clasificacion,
         CASE
-            WHEN mseg.BWART IN ('261', '201') THEN mseg.ERFMG
-            WHEN mseg.BWART IN ('262', '202') THEN -mseg.ERFMG
+            WHEN mseg.BWART IN ('261', '201') THEN
+                mseg.MENGE * CASE
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
+                    ELSE 1
+                END
+            WHEN mseg.BWART IN ('262', '202') THEN
+                -mseg.MENGE * CASE
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
+                    ELSE 1
+                END
             ELSE 0
         END AS Consumo,
         CASE
-            WHEN mseg.BWART = '551' THEN mseg.ERFMG
-            WHEN mseg.BWART = '552' THEN -mseg.ERFMG
+            WHEN mseg.BWART = '551' THEN
+                mseg.MENGE * CASE
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
+                    ELSE 1
+                END
+            WHEN mseg.BWART = '552' THEN
+                -mseg.MENGE * CASE
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110220 THEN 25000
+                    WHEN CAST(mseg.MATNR AS BIGINT) = 110291 THEN 5000
+                    ELSE 1
+                END
             ELSE 0
         END AS Averiado
     FROM SAPSR3.MSEG AS mseg
@@ -58,7 +78,7 @@ FROM (
         ON makt.MANDT = mara.MANDT
         AND makt.MATNR = mara.MATNR
     WHERE mkpf.BUDAT >= '${fromDateSap}'
-      AND mseg.WERKS = 'PB00'
+      AND mseg.WERKS LIKE 'PB%'
       AND mseg.LGORT IN ('3300', '3301')
       AND mseg.BWART IN ('261', '262', '201', '202', '551', '552')
       AND (mara.MATKL IN ('EMPAQ001', 'EMPAQ003', 'CESTAS')
