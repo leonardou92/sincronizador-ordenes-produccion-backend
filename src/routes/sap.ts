@@ -1,12 +1,29 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
 import { sincronizarSapInsumosSchema } from "../schemas/sap.schema";
+import { listSapCentros, SapCentrosError } from "../services/sapCentrosService";
 import {
   sincronizarSapInsumosProceso,
   SincronizarSapInsumosError,
 } from "../services/sincronizarSapInsumosService";
 
 export async function sapRoutes(app: FastifyInstance): Promise<void> {
+  app.get("/sap/centros", async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const centros = await listSapCentros();
+      return reply.send({
+        total: centros.length,
+        centros,
+      });
+    } catch (error) {
+      if (error instanceof SapCentrosError) {
+        return reply.status(400).send({ error: error.message });
+      }
+      request.log.error(error, "Error al consultar centros SAP");
+      return reply.status(500).send({ error: "No se pudo consultar centros SAP" });
+    }
+  });
+
   app.post(
     "/sap/sincronizar-insumos-proceso",
     async (request: FastifyRequest, reply: FastifyReply) => {

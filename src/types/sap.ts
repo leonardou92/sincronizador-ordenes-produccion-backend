@@ -1,3 +1,8 @@
+export interface SapCentro {
+  werks: string;
+  name1: string;
+}
+
 export interface SincronizarSapInsumosResultado {
   origen: "sap_sybase";
   fecha_desde: string;
