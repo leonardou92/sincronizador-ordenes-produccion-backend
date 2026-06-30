@@ -9,6 +9,7 @@ import { resumenRoutes } from "./routes/resumen";
 import { sapRoutes } from "./routes/sap";
 import { usersRoutes } from "./routes/users";
 import { authRoutes } from "./routes/auth";
+import { dashboardRoutes } from "./routes/dashboard";
 import { startAdSyncCron } from "./jobs/adSyncCron";
 import { startProduccionSyncCron } from "./jobs/produccionSyncCron";
 
@@ -23,6 +24,7 @@ async function main(): Promise<void> {
   await app.register(sapRoutes);
   await app.register(usersRoutes);
   await app.register(authRoutes);
+  await app.register(dashboardRoutes);
 
   startAdSyncCron(app.log);
   startProduccionSyncCron(app.log);
